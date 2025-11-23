@@ -1,0 +1,74 @@
+{
+  "tests": [
+    {
+      "name": "Compilation",
+      "setup": "javac In.java Wordle.java TesterWordle.java",
+      "run": "java TesterWordle readDictionary",
+      "input": "",
+      "output": "Testing readDictionary:\nPassed: Dictionary read successfully (Passed)",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "ContainsChar Tests",
+      "setup": "",
+      "run": "java TesterWordle containsChar",
+      "input": "",
+      "output": "Testing containsChar:\nPassed 4/4 tests (Passed)",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 20
+    },
+    {
+      "name": "ComputeFeedback Tests",
+      "setup": "",
+      "run": "java TesterWordle computeFeedback",
+      "input": "",
+      "output": "Testing computeFeedback:\nPassed 3/3 tests (Passed)",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 25
+    },
+    {
+      "name": "IsAllGreen Tests",
+      "setup": "",
+      "run": "java TesterWordle isAllGreen",
+      "input": "",
+      "output": "Testing isAllGreen:\nPassed 3/3 tests (Passed)",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 15
+    },
+    {
+      "name": "Game: Winning",
+      "setup": "",
+      "run": "java TesterWordle testGameWin",
+      "input": "",
+      "output": "Congratulations",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Game: Losing",
+      "setup": "",
+      "run": "java TesterWordle testGameLose",
+      "input": "",
+      "output": "secret word was",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Game: Invalid Input",
+      "setup": "",
+      "run": "java TesterWordle testGameInvalid",
+      "input": "",
+      "output": "Invalid word",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    }
+  ]
+}
