@@ -6,7 +6,7 @@ import java.io.IOException;
 /**
  * Tester class for Wordle.java
  * Usage: java TesterWordle [testName]
- * Supported testNames: readDictionary, containsChar, computeFeedback, isAllGreen, testGameWin, testGameLose, testGameInvalid
+ * Supported testNames: readDictionary, chooseSecretWord, containsChar, computeFeedback, storeGuess, isAllGreen, testGameWin, testGameLose, testGameInvalid
  */
 public class TesterWordle {
 
@@ -16,8 +16,10 @@ public class TesterWordle {
         } else {
             switch (args[0]) {
                 case "readDictionary": testReadDictionary(); break;
+                case "chooseSecretWord": testChooseSecretWord(); break;
                 case "containsChar": testContainsChar(); break;
                 case "computeFeedback": testComputeFeedback(); break;
+                case "storeGuess": testStoreGuess(); break;
                 case "isAllGreen": testIsAllGreen(); break;
                 case "testGameWin": testGameWin(); break;
                 case "testGameLose": testGameLose(); break;
@@ -29,83 +31,12 @@ public class TesterWordle {
 
     private static void runAll() {
         testReadDictionary();
+        testChooseSecretWord();
         testContainsChar();
         testComputeFeedback();
+        testStoreGuess();
         testIsAllGreen();
         // Game tests are not run here because they close System.in and must be run separately
-    }
-
-    // --- Game Scenario Tests ---
-
-    public static void testGameWin() {
-        // Scenario: Secret is APPLE. User guesses HELPS then APPLE.
-        // Expectation: Game prints "Congratulations"
-        String input = "HELPS\nAPPLE\n";
-        runGameWithInput("APPLE", input, "Win Scenario");
-    }
-
-    public static void testGameLose() {
-        // Scenario: Secret is APPLE. User guesses WRONG 6 times.
-        // Expectation: Game prints "The secret word was"
-        String input = "WRONG\nWRONG\nWRONG\nWRONG\nWRONG\nWRONG\n";
-        runGameWithInput("APPLE", input, "Lose Scenario");
-    }
-
-    public static void testGameInvalid() {
-        // Scenario: Secret is APPLE. User enters invalid words first.
-        // 1. "ABC" (Too short)
-        // 2. "ABCDEF" (Too long)
-        // 3. "APPLE" (Valid)
-        // Expectation: Game prints "Invalid word" and eventually "Congratulations"
-        String input = "ABC\nABCDEF\nAPPLE\n";
-        runGameWithInput("APPLE", input, "Invalid Input Scenario");
-    }
-
-    /**
-     * Helper to run the main game with a specific secret word and simulated input.
-     */
-    private static void runGameWithInput(String secret, String inputData, String testName) {
-        System.out.println("Testing " + testName + ":");
-        
-        File original = new File("dictionary.txt");
-        File backup = new File("dictionary_backup.tmp");
-        boolean backedUp = false;
-
-        try {
-            // 1. Backup the original dictionary
-            if (original.exists()) {
-                if (original.renameTo(backup)) {
-                    backedUp = true;
-                } else {
-                    System.out.println("Failed to backup dictionary. Skipping test.");
-                    return;
-                }
-            }
-
-            // 2. Create a temporary dictionary with the fixed secret word
-            try (FileWriter writer = new FileWriter("dictionary.txt")) {
-                writer.write(secret);
-            }
-
-            // 3. Inject the simulated input
-            System.setIn(new ByteArrayInputStream(inputData.getBytes()));
-
-            // 4. Run the student's main method
-            Wordle.main(new String[]{});
-
-        } catch (Exception e) {
-            System.out.println("Game crashed during " + testName + ": " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            // 5. Restore original dictionary
-            File temp = new File("dictionary.txt");
-            if (temp.exists()) {
-                temp.delete();
-            }
-            if (backedUp && backup.exists()) {
-                backup.renameTo(original);
-            }
-        }
     }
 
     // --- Unit Tests ---
@@ -136,6 +67,34 @@ public class TesterWordle {
             }
         } catch (Exception e) {
             System.out.println("Failed: Exception thrown - " + e.getMessage());
+        }
+    }
+
+    public static void testChooseSecretWord() {
+        System.out.println("Testing chooseSecretWord:");
+        String[] mockDict = {"ONE", "TWO", "THREE"};
+        boolean passed = true;
+        
+        for (int i = 0; i < 10; i++) {
+            String secret = Wordle.chooseSecretWord(mockDict);
+            if (secret == null) {
+                System.out.println("Failed: Secret word is null");
+                passed = false;
+                break;
+            }
+            boolean found = false;
+            for (String w : mockDict) {
+                if (w.equals(secret)) found = true;
+            }
+            if (!found) {
+                System.out.println("Failed: Returned word '" + secret + "' is not in the dictionary");
+                passed = false;
+                break;
+            }
+        }
+
+        if (passed) {
+            System.out.println("Passed: Selected valid words from dictionary (Passed)");
         }
     }
 
@@ -194,6 +153,27 @@ public class TesterWordle {
         }
     }
 
+    public static void testStoreGuess() {
+        System.out.println("Testing storeGuess:");
+        char[][] guesses = new char[6][5];
+        String guess = "HELLO";
+        
+        Wordle.storeGuess(guess, guesses, 1); // Store at row 1 (second attempt)
+        
+        String stored = new String(guesses[1]);
+        String emptyRow = new String(guesses[0]).replace('\0', '_');
+        
+        boolean correctRow = stored.equals("HELLO");
+        boolean untouchedRow = emptyRow.equals("_____");
+        
+        if (correctRow && untouchedRow) {
+            System.out.println("Passed: Correctly stored guess in 2D array (Passed)");
+        } else {
+            if (!correctRow) System.out.println("Failed: Row 1 should be HELLO, got " + stored);
+            if (!untouchedRow) System.out.println("Failed: Row 0 should be empty, got " + emptyRow);
+        }
+    }
+
     public static void testIsAllGreen() {
         System.out.println("Testing isAllGreen:");
         int passed = 0;
@@ -216,6 +196,48 @@ public class TesterWordle {
             System.out.println("Passed " + passed + "/" + total + " tests (Passed)");
         } else {
             System.out.println("Passed " + passed + "/" + total + " tests");
+        }
+    }
+
+    // --- Game Scenario Tests ---
+
+    public static void testGameWin() {
+        // Scenario: Secret is APPLE. User guesses HELPS then APPLE.
+        String input = "HELPS\nAPPLE\n";
+        runGameWithInput("APPLE", input, "Win Scenario");
+    }
+
+    public static void testGameLose() {
+        // Scenario: Secret is APPLE. User guesses WRONG 6 times.
+        String input = "WRONG\nWRONG\nWRONG\nWRONG\nWRONG\nWRONG\n";
+        runGameWithInput("APPLE", input, "Lose Scenario");
+    }
+
+    public static void testGameInvalid() {
+        // Scenario: Secret is APPLE. User enters invalid words first.
+        String input = "ABC\nABCDEF\nAPPLE\n";
+        runGameWithInput("APPLE", input, "Invalid Input Scenario");
+    }
+
+    private static void runGameWithInput(String secret, String inputData, String testName) {
+        System.out.println("Testing " + testName + ":");
+        File original = new File("dictionary.txt");
+        File backup = new File("dictionary_backup.tmp");
+        boolean backedUp = false;
+        try {
+            if (original.exists()) {
+                if (original.renameTo(backup)) backedUp = true;
+                else { System.out.println("Failed to backup dictionary."); return; }
+            }
+            try (FileWriter writer = new FileWriter("dictionary.txt")) { writer.write(secret); }
+            System.setIn(new ByteArrayInputStream(inputData.getBytes()));
+            Wordle.main(new String[]{});
+        } catch (Exception e) {
+            System.out.println("Game crashed: " + e.getMessage());
+        } finally {
+            File temp = new File("dictionary.txt");
+            if (temp.exists()) temp.delete();
+            if (backedUp && backup.exists()) backup.renameTo(original);
         }
     }
 }
